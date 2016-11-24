@@ -1,6 +1,6 @@
 @Grab('org.codehaus.groovy.modules:http-builder-ng:0.10.2')
-import groovyx.net.http.*;
 import groovy.json.JsonBuilder;
+import groovyx.net.http.*;
 import static Pools.*;
 
 final File directory = new File('/home/david/tmp/counts');

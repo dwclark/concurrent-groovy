@@ -1,8 +1,8 @@
-import java.util.concurrent.*;
-import groovyx.gpars.scheduler.DefaultPool;
-import groovyx.gpars.group.DefaultPGroup;
 import groovyx.gpars.activeobject.ActiveObjectRegistry;
+import groovyx.gpars.group.DefaultPGroup;
+import groovyx.gpars.scheduler.DefaultPool;
 import groovyx.gpars.scheduler.FJPool;
+import java.util.concurrent.*;
 
 class Pools {
 

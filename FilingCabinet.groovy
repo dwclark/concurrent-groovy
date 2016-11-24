@@ -1,8 +1,8 @@
-import static Pools.*
-import groovyx.gpars.activeobject.ActiveObject;
 import groovyx.gpars.activeobject.ActiveMethod;
+import groovyx.gpars.activeobject.ActiveObject;
 import groovyx.gpars.dataflow.DataflowVariable;
 import java.util.concurrent.ThreadLocalRandom;
+import static Pools.*
 
 initialize();
 

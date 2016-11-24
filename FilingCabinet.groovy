@@ -13,7 +13,7 @@ final List<String> CATEGORIES = [ 'lame', 'ok', 'awesome' ].asImmutable();
 class Cabinet {
     final int modulo;
     final File folder;
-    final Map<String,File> files = [:]
+    final Map<String,RandomAccessFile> files = [:]
 
     Cabinet(File root, int modulo) {
         this.modulo = modulo;
@@ -23,10 +23,11 @@ class Cabinet {
         }
     }
 
-    private File file(final String category) {
-        File ret = files[category];
+    private RandomAccessFile file(final String category) {
+        RandomAccessFile ret = files[category];
         if(ret == null) {
-            ret = new File(folder, category);
+            ret = new RandomAccessFile(new File(folder, category), 'rw');
+            ret.seek(ret.length());
             files[category] = ret;
         }
 
@@ -39,8 +40,9 @@ class Cabinet {
     }
 
     boolean saveIt(int id, String category, String info) {
-        file(category).withWriterAppend { writer ->
-            writer.write(String.format("%d %s%n", id, info)); }
+        RandomAccessFile raf = file(category);
+        raf.writeInt(id);
+        raf.writeUTF(info);
         return true;
     }
         
@@ -50,13 +52,26 @@ class Cabinet {
     }
 
     private List<String> readIt(int id, String category) {
+        RandomAccessFile raf = file(category);
+        long current = raf.filePointer;
         List<String> lines = [];
-        file(category).withReader { reader ->
-            reader.eachLine { line ->
-                int index = line.indexOf(' ');
-                int num = line.substring(0, index) as int;
-                if(num == id) {
-                    lines << line.substring(index + 1); }; }; };
+        raf.seek(0);
+        try {
+            while(true) {
+                int foundId = raf.readInt();
+                String info = raf.readUTF();
+                if(foundId == id) {
+                    lines << info;
+                }
+            }
+        }
+        catch(EOFException eof) {
+            //we are being lazy, ignore
+        }
+        finally {
+            raf.seek(current);
+        }
+
         return lines;
     }
 }

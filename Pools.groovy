@@ -2,6 +2,7 @@ import java.util.concurrent.*;
 import groovyx.gpars.scheduler.DefaultPool;
 import groovyx.gpars.group.DefaultPGroup;
 import groovyx.gpars.activeobject.ActiveObjectRegistry;
+import groovyx.gpars.scheduler.FJPool;
 
 class Pools {
 
@@ -18,6 +19,8 @@ class Pools {
     static final String ACTOR_GROUP_NAME = 'theActorGroup';
     static final DefaultPGroup ACTOR_IO_GROUP = new DefaultPGroup(ACTOR_IO_POOL);
 
+    static final FJPool COMPUTE_POOL = new FJPool(CORES+1);
+
     static final String ALPHABET = (('A'..'N')+('P'..'Z')+('a'..'k')+('m'..'z')+('2'..'9')).join();
     
     static String randomText(int length) {
@@ -33,5 +36,6 @@ class Pools {
     static void shutdown() {
         IO_POOL.shutdown();
         ACTOR_IO_POOL.shutdown();
+        COMPUTE_POOL.shutdown();
     }
 }

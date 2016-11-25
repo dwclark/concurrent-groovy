@@ -68,7 +68,7 @@ Cart cart = new Cart(service);
 
 def randomAction = { ->
     ThreadLocalRandom r = ThreadLocalRandom.current();
-    if(r.nextInt(10) < 6) {
+    if(r.nextInt(100) < 53) {
         cart.remove(0);
     }
     else {

@@ -9,7 +9,7 @@ initialize();
 final File ROOT = new File('/home/david/tmp/cabinets');
 final List<String> CATEGORIES = [ 'lame', 'ok', 'awesome' ].asImmutable();
 
-@ActiveObject(ACTOR_GROUP_NAME)
+@ActiveObject(IO_GROUP_NAME)
 class Cabinet {
     final int modulo;
     final File folder;
@@ -100,9 +100,10 @@ class Cabinets {
     }
 }
 
-def cabinets = new Cabinets(ROOT, 8);
+final int LEVEL = 20;
+def cabinets = new Cabinets(ROOT, LEVEL);
 
-def threads = (0..20).collect {
+def threads = (0..LEVEL).collect {
     Thread.start {
         ThreadLocalRandom r = ThreadLocalRandom.current();
         100_000.times {
@@ -112,6 +113,6 @@ def threads = (0..20).collect {
 
 threads.each { it.join(); }
 println("************************************************************");
-println("Reading id 57, modulo: ${57 % 8}, category: ${CATEGORIES[2]}");
+println("Reading id 57, modulo: ${57 % 20}, category: ${CATEGORIES[2]}");
 println(cabinets.read(57, CATEGORIES[2]).val);
 shutdown();

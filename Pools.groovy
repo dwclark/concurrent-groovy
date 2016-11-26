@@ -27,7 +27,7 @@ class Pools {
     static final FJPool COMPUTE_POOL = new FJPool(CORES+1);
     static final DefaultPGroup COMPUTE_GROUP = new DefaultPGroup(COMPUTE_POOL);
     
-    static final String ALPHABET = (('A'..'N')+('P'..'Z')+('a'..'k')+('m'..'z')+('2'..'9')).join();
+    static final String ALPHABET = (('A'..'Z')+('a'..'z')).join();
     
     static String randomText(int length) {
         StringBuilder sb = new StringBuilder(length);

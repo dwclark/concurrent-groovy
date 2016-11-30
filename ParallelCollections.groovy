@@ -8,30 +8,6 @@ import jsr166y.ForkJoinPool;
 import static Pools.*;
 import static groovyx.gpars.GParsPool.withExistingPool;
 
-//Some statically compile helper classes for Java 8 Streams
-//and GPars JSR 166y parallel arrays
-@CompileStatic class IsEven implements LongPredicate, Ops.LongPredicate {
-    final static IsEven instance = new IsEven();
-    boolean test(final long lng) {
-        return (lng % 2L) == 0L
-    }
-
-    boolean op(final long lng) {
-        return (lng % 2) == 0L;
-    }
-}
-
-@CompileStatic class BitCount implements LongToIntFunction, Ops.LongOp {
-    final static BitCount instance = new BitCount();
-    int applyAsInt(final long lng) {
-        return Long.bitCount(lng);
-    }
-
-    long op(final long lng) {
-        return (long) Long.bitCount(lng);
-    }
-}
-
 //These are the main tests. Any test that can be static is eliminate measuring
 //groovy dynamic dispatch. However, GPars parallel collections cannot be compiled static
 //because parallel collections are only installed at the meta class level at runtime.
@@ -50,7 +26,7 @@ class AllTests {
             tmp = (LongStream.of(ary)
                    .parallel()
                    .filter({ long l -> l % 2L == 0L; })
-                   .mapToInt({ long l -> Long.bitCount(l); })
+                   .mapToInt(Long.&bitCount)
                    .average()
                    .asDouble);
         }
@@ -60,11 +36,14 @@ class AllTests {
 
     static double groovyStaticWithJava8Streams(long[] ary, int iterations) {
         double tmp;
+        LongPredicate longPred = new LongPredicate() { boolean test(long lVal) { return lVal % 2L == 0L; } };
+        LongToIntFunction long2Int = new LongToIntFunction() { int applyAsInt(long lVal) { return Long.bitCount(lVal); } };
+        
         for(int i = 0; i < iterations; ++i) {
             tmp = (LongStream.of(ary)
                    .parallel()
-                   .filter(IsEven.instance)
-                   .mapToInt(BitCount.instance)
+                   .filter(longPred)
+                   .mapToInt(long2Int)
                    .average()
                    .asDouble);
         }
@@ -74,10 +53,13 @@ class AllTests {
 
     static double gparsJsr166y(long[] ary, int iterations, ForkJoinPool fjPool) {
         double tmp;
+        Ops.LongPredicate longPred = new Ops.LongPredicate() { boolean op(long lng) { return (lng % 2) == 0L; } };
+        Ops.LongOp longOp = new Ops.LongOp() {  long op(final long lng) { return (long) Long.bitCount(lng); } };
+        
         for(int i = 0; i < iterations; ++i) {
             ParallelLongArrayWithFilter plawf = (ParallelLongArray.createFromCopy(ary, fjPool)
-                                                 .withFilter(IsEven.instance)
-                                                 .replaceWithMapping(BitCount.instance));
+                                                 .withFilter(longPred)
+                                                 .replaceWithMapping(longOp));
             ParallelLongArray.SummaryStatistics s = plawf.summary();
             tmp = plawf.sum() / s.size();
         }
@@ -90,7 +72,7 @@ class AllTests {
         double tmp;
         for(int i = 0; i < iterations; ++i) {
             withExistingPool(fjPool) {
-                def intermediate = ary.findAllParallel(IsEven.instance.&test).collectParallel(BitCount.instance.&applyAsInt);
+                def intermediate = ary.findAllParallel({ long l -> l % 2L == 0L; }).collectParallel(Long.&bitCount);
                 tmp = intermediate.sumParallel() / intermediate.size();
             }
         }
@@ -118,19 +100,23 @@ class AllTests {
     }
 }
 
-final long[] longs = ThreadLocalRandom.current().longs(1_000_000).toArray();
+
 final long[] warmUp = ThreadLocalRandom.current().longs(100).toArray();
+final int warmUpCount = 50_000;
+
+final long[] longs = ThreadLocalRandom.current().longs(1_000_000).toArray();
+final int longsCount = 20;
 
 //do warmups
-AllTests.doTiming({ -> AllTests.groovyClosuresWithJava8Streams(warmUp, 20_000); }, "Groovy 8 Closures With Java 8 Streams");
-AllTests.doTiming({ -> AllTests.groovyStaticWithJava8Streams(warmUp, 20_000); }, "Groovy Static With Java 8 Streams");
-AllTests.doTiming({ -> AllTests.gparsJsr166y(warmUp, 20_000, COMPUTE_POOL.forkJoinPool); }, "GPars JSR 166y Parallel Arrays");
-AllTests.doTiming({ -> AllTests.gparsParallelCollections(warmUp, 20_000, COMPUTE_POOL.forkJoinPool); }, "GPars Parallel Collections");
-AllTests.doTiming({ -> AllTests.singleThread(warmUp, 20_000); }, "Single Thread"); 
+AllTests.doTiming({ -> AllTests.groovyClosuresWithJava8Streams(warmUp, warmUpCount); }, "Groovy 8 Closures With Java 8 Streams");
+AllTests.doTiming({ -> AllTests.groovyStaticWithJava8Streams(warmUp, warmUpCount); }, "Groovy Static With Java 8 Streams");
+AllTests.doTiming({ -> AllTests.gparsJsr166y(warmUp, warmUpCount, COMPUTE_POOL.forkJoinPool); }, "GPars JSR 166y Parallel Arrays");
+AllTests.doTiming({ -> AllTests.gparsParallelCollections(warmUp, warmUpCount, COMPUTE_POOL.forkJoinPool); }, "GPars Parallel Collections");
+AllTests.doTiming({ -> AllTests.singleThread(warmUp, warmUpCount); }, "Single Thread"); 
 
 //now do the real thing
-println(AllTests.doTiming({ -> AllTests.groovyClosuresWithJava8Streams(longs, 20); }, "Groovy 8 Closures With Java 8 Streams"));
-println(AllTests.doTiming({ -> AllTests.groovyStaticWithJava8Streams(longs, 20); }, "Groovy Static With Java 8 Streams"));
-println(AllTests.doTiming({ -> AllTests.gparsJsr166y(longs, 20, COMPUTE_POOL.forkJoinPool); }, "GPars JSR 166y Parallel Arrays"))
-println(AllTests.doTiming({ -> AllTests.gparsParallelCollections(longs, 20, COMPUTE_POOL.forkJoinPool); }, "GPars Parallel Collections"));
-println(AllTests.doTiming({ -> AllTests.singleThread(longs, 20); }, "Single Thread"));
+println(AllTests.doTiming({ -> AllTests.groovyClosuresWithJava8Streams(longs, longsCount); }, "Groovy 8 Closures With Java 8 Streams"));
+println(AllTests.doTiming({ -> AllTests.groovyStaticWithJava8Streams(longs, longsCount); }, "Groovy Static With Java 8 Streams"));
+println(AllTests.doTiming({ -> AllTests.gparsJsr166y(longs, longsCount, COMPUTE_POOL.forkJoinPool); }, "GPars JSR 166y Parallel Arrays"))
+println(AllTests.doTiming({ -> AllTests.gparsParallelCollections(longs, longsCount, COMPUTE_POOL.forkJoinPool); }, "GPars Parallel Collections"));
+println(AllTests.doTiming({ -> AllTests.singleThread(longs, longsCount); }, "Single Thread"));

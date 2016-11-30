@@ -102,7 +102,7 @@ class AllTests {
 
 
 final long[] warmUp = ThreadLocalRandom.current().longs(100).toArray();
-final int warmUpCount = 50_000;
+final int warmUpCount = 20_000;
 
 final long[] longs = ThreadLocalRandom.current().longs(1_000_000).toArray();
 final int longsCount = 20;

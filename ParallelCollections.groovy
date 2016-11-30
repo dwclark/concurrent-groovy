@@ -8,7 +8,7 @@ import jsr166y.ForkJoinPool;
 import static Pools.*;
 import static groovyx.gpars.GParsPool.withExistingPool;
 
-//These are the main tests. Any test that can be static is eliminate measuring
+//These are the main tests. Any test that can be static is. This eliminates measuring
 //groovy dynamic dispatch. However, GPars parallel collections cannot be compiled static
 //because parallel collections are only installed at the meta class level at runtime.
 @CompileStatic

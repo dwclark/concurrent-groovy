@@ -6,8 +6,25 @@ import static Pools.*;
 def hosts = [ 'https://www.google.com', 'https://www.yahoo.com/', 'https://slashdot.org',
               'http://www.cnn.com', 'https://www.youtube.com/', 'https://www.bing.com/',
               'https://g3summit.com/conference/fort_lauderdale/2016/11/home',
-              'http://www.ford.com', 'https://www.facebook.com/' ].asImmutable()
-              
+              'http://www.ford.com', 'https://www.facebook.com/' ].asImmutable();
+
+/*
+  This demonstrates the "and then and then and then and then..." pattern, but
+  every task executes asynchronously. There is never any blocking here because
+  of our use of completable future.
+
+  Task:
+  1) Download the main index file from the websites as text
+  2) Count how many letters are on the main index page
+  3) Save the results to a file
+
+  This particular set of tasks is pretty stupid, but this is the basic
+  framework for doing web crawling: pull down a file, analyze it, store the results.
+  A real web crawler would probably have a queue that the analysis phase would then
+  schedule work on, based on the analysis done. Extending our toy project to do this
+  would simply be a matter of adding a blocking queue and looping on work to be available
+  in the queue.
+ */
 def futures = hosts.collect { theUri ->
     HttpBuilder.configure {
         execution.maxThreads = IO_MAX;

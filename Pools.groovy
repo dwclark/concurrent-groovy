@@ -5,12 +5,15 @@ import groovyx.gpars.scheduler.FJPool;
 import java.util.concurrent.*;
 import groovy.transform.CompileStatic;
 
+/*
+  Grab bag utility methods for demos.
+ */
 class Pools {
 
-    static final File WORKING_DIRECTORY = populateWorking();
-    static final File COUNTS_DIRECTORY = populateCounts();
-    static final File CABINETS_DIRECTORY = populateCabinets();
-    
+    /*
+      Define the pools used during demos. It is important to execute tasks on thread pools
+      for performance and resource utilization management.
+     */
     static final int CORES = Runtime.runtime.availableProcessors();
     static final int IO_MAX = CORES * 4;
     static final long IO_KEEP_ALIVE = 1L;
@@ -26,7 +29,29 @@ class Pools {
 
     static final FJPool COMPUTE_POOL = new FJPool(CORES+1);
     static final DefaultPGroup COMPUTE_GROUP = new DefaultPGroup(COMPUTE_POOL);
-    
+
+    /*
+      Methods to initialize and shutdown the pools. It is important to shutdown pools cleanly
+      to make sure all in-flight tasks are executed and to actually terminate the program.
+      Any pool running non-daemon threads will block the JVM from exiting.
+     */
+    static void initialize() {
+        ActiveObjectRegistry.instance.register(IO_GROUP_NAME, IO_GROUP);
+    }
+
+    static void shutdown() {
+        JAVA_IO_POOL.shutdown();
+        GROOVY_IO_POOL.shutdown();
+        COMPUTE_POOL.shutdown();
+    }
+
+    /*
+      Utility methods shared/used by groovy scripts.
+     */
+    static final File WORKING_DIRECTORY = populateWorking();
+    static final File COUNTS_DIRECTORY = populateCounts();
+    static final File CABINETS_DIRECTORY = populateCabinets();
+
     static final String ALPHABET = (('A'..'Z')+('a'..'z')).join();
     
     static String randomText(int length) {
@@ -38,16 +63,6 @@ class Pools {
         return sb.toString();
     }
     
-    static void initialize() {
-        ActiveObjectRegistry.instance.register(IO_GROUP_NAME, IO_GROUP);
-    }
-
-    static void shutdown() {
-        JAVA_IO_POOL.shutdown();
-        GROOVY_IO_POOL.shutdown();
-        COMPUTE_POOL.shutdown();
-    }
-
     static File populateWorking() {
         File tmp = new File("tmp");
         if(!tmp.exists()) tmp.mkdir();

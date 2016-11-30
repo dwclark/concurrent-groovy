@@ -6,6 +6,14 @@ import static Pools.*;
 import groovy.transform.CompileStatic;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/*
+  This file is not discussed in the demo/presentation.
+  What it shows is just how easy it is to create a combination
+  object pool/execution pool. Something like this can easily
+  be used to execute all of your DB calls in a non-blocking
+  and thread safe way. This could be a drop in replacement for
+  something like Ratpack's ratpack.exec.Blocking.* calls.
+ */
 @CompileStatic
 class FakeConnection {
     final int id;
